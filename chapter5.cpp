@@ -504,7 +504,7 @@ namespace {
 
     class RotateMatrix_ {
     public:
-        explicit RotateMatrix_(std::vector<std::vector<int *>> squre_matrix) : square_matrix_(*squre_matrix) {}
+        explicit RotateMatrix_(std::vector<std::vector<int >> *squre_matrix) : square_matrix_(*squre_matrix) {}
 
         int ReadEntry(int i, int j) const {
             return square_matrix_[std::size(square_matrix_) - 1 - j][i];
