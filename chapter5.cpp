@@ -5,6 +5,13 @@
 
 #include <iostream>
 #include <vector>
+#include <deque>
+#include <algorithm>
+#include <numeric>
+#include <random>
+#include <unordered_map>
+
+
 
 // 정수 배열이 주어졌을 떄 짝수가 가장 먼저 나오게 하기
 
@@ -201,5 +208,124 @@ void Rearrange(std::vector<int> *A_ptr) {
 
 // 5.9 n보다 작은 모든 소수 나열하기
 std::vector<int> GeneratePrimes(int n) {
+    std::vector<int> primes;
+
+    std::deque<bool> is_prime(n + 1, true);
+    is_prime[0] = is_prime[1] = false;
+    for (int p = 2; p <= n; ++p) {
+        if (is_prime[p]) {
+            primes.emplace_back(p);
+
+            for (int i = p * 2; i <= n; i += p) {
+                is_prime[i] = false;
+            }
+        }
+    }
+    return primes;
+}
+
+std::vector<int> GeneratePrimes2(int n) {
+    if (n < 2)
+        return {};
+
+    const int size = floor(0.5 * (n - 3)) + 1;
+    std::vector<int> primes;
+    primes.emplace_back(2);
+    //
+    //
+    //
+    //
+    std::deque<bool> is_prime(size, true);
+    for (int i = 0; i < size; ++i) {
+        if (is_prime[i]) {
+            int p = (i * 2) + 3;
+            primes.emplace_back(p);
+            //
+            //
+            //
+            //
+            //
+            for (long long j = 2LL * i * i + 6 * i + 3; j < size; j += p) {
+                is_prime[j] = false;
+            }
+        }
+    }
+    return primes;
+}
+// 5.10 배열 안의 원소로 수열 구하기
+
+void ApplyPermutation(std::vector<int> perm, std::vector<int> *A_ptr) {
+    std::vector<int> &A = *A_ptr;
+    for (int i = 0; i < std::size(A); ++i) {
+        while (perm[i] != i) {
+            std::swap(A[i], A[perm[i]]);
+            std::swap(perm[i], perm[perm[i]]);
+        }
+    }
+}
+
+// 5.11 다음 순열 구하기
+std::vector<int> NextPermutation(std::vector<int> perm) {
+    auto inversion_point = std::is_sorted_until(std::rbegin(perm), std::rend(perm));
+    if (inversion_point == std::rend(perm)) {
+        return {};
+    }
+
+    auto least_upper_bound = std::upper_bound(std::rbegin(perm), inversion_point, *inversion_point);
+
+    std::iter_swap(inversion_point, least_upper_bound);
+
+    std::reverse(std::rbegin(perm), inversion_point);
+    return perm;
+}
+
+// 5.12 오프라인 데이터 샘플 구하기
+void RandomSampling(int k, std::vector<int> *A_ptr) {
+    std::vector<int> &A = *A_ptr;
+
+    std::default_random_engine seed((std::random_device()) ()); // 난수 생성기
+    for (int i = 0; i < k; ++i) {
+        std::swap(A[i], A[std::uniform_int_distribution<int>{i, static_cast<int>(A.size()) - 1}(seed)]);
+    }
+}
+
+// 5.13 온라인 데이터 샘플 구하기
+// 가정: 적어도 k개의 원소가 유입된다.
+std::vector<int> OnlineRandomSample(std::vector<int>::const_iterator stream_begin,
+                                    const std::vector<int>::const_iterator steam_end, int k) {
+
+    std::vector<int> running_sample;
+    // 각 k개의 원소를 저장한다.
+    for (int i = 0; i < k; ++i) {
+        running_sample.emplace_back(*stream_begin++);
+    }
+
+    std::default_random_engine seed((std::random_device()) ()); // 난수 생성기
+    int num_seen_so_far = k;
+    while (stream_begin != steam_end) {
+        int x = *stream_begin++;
+        ++num_seen_so_far;
+        // [0, num_seen_so_far -1] 사이에서 임의의 숫자를 생성한다,
+        // 그리고 만약에 그 숫자가 [0, k -1] 사이에 들어 있다면, 해당 원소를
+        // x와 맞바꾼다.
+        if (const int idx_to_replace = std::uniform_int_distribution<int>{0, num_seen_so_far - 1}(seed);
+                idx_to_replace < k) {
+            running_sample[idx_to_replace] = x;
+        }
+    }
+    return running_sample;
+}
+
+// 5.14 임의의 순열 계산하기
+std::vector<int> ComputeRandomPermutation(int n) {
+    std::vector<int> permutation(n);
+
+    std::iota(std::begin(permutation), std::end(permutation), 0);
+    RandomSampling(n, &permutation);
+    return permutation;
+}
+
+// 5.15 임의의 부분 집합 만들기
+std::vector<int> RandomSubset(int n, int k) {
 
 }
