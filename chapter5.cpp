@@ -15,6 +15,7 @@
 
 // 정수 배열이 주어졌을 떄 짝수가 가장 먼저 나오게 하기
 
+
 void EvenOdd(std::vector<int> *A_ptr) {
     std::vector<int> &A = *A_ptr;
     int next_even = 0, next_odd = size(A) - 1;
@@ -179,7 +180,7 @@ double BuyAndSellStockTwice(const std::vector<double> &prices) {
     std::vector<double> first_buy_sell_profits(std::size(prices), 0);
     double min_price_so_far = std::numeric_limits<double>::infinity();
 
-    // 
+    //
     //
     for (int i = 0; i < std::size(prices); ++i) {
         min_price_so_far = std::min(min_price_so_far, prices[i]);
@@ -327,5 +328,96 @@ std::vector<int> ComputeRandomPermutation(int n) {
 
 // 5.15 임의의 부분 집합 만들기
 std::vector<int> RandomSubset(int n, int k) {
+    std::unordered_map<int, int> changed_elements;
+
+    std::default_random_engine seed((std::random_device()) ()); // 난수 생성기
+
+    for (int i = 0; i < k; ++i) {
+
+        int rand_idx = std::uniform_int_distribution<int>{i, n - 1}(seed);
+        if (auto ptr1 = changed_elements.find(rand_idx), ptr2 = changed_elements.find(i);
+                ptr1 == std::end(changed_elements) && ptr2 == std::end(changed_elements)) {
+            changed_elements[rand_idx] = i;
+            changed_elements[i] = rand_idx;
+        } else if (ptr1 == std::end(changed_elements) && ptr2 != std::end(changed_elements)) {
+            changed_elements[rand_idx] = ptr2->second;
+            ptr2->second = rand_idx;
+        } else if (ptr1 == std::end(changed_elements) && ptr2 == std::end(changed_elements)) {
+            changed_elements[rand_idx] = ptr1->second;
+            ptr1->second = i;
+        } else {
+            int temp = ptr2->second;
+            changed_elements[i] = ptr1->second;
+            changed_elements[rand_idx] = temp;
+        }
+    }
+    std::vector<int> result;
+    for (int i = 0; i < k; ++i) {
+        result.emplace_back(changed_elements[i]);
+    }
+    return result;
+}
+
+// 5.16 균등하지 않은 임의의 숫자 생성하기
+int NonUniformRandomNumberGeneration(const std::vector<int> &values,
+                                     const std::vector<double> &probabilities) {
+
+    std::vector<double> prefix_sum_of_probabilities;
+
+    std::partial_sum(std::cbegin(probabilities), std::cend(probabilities),
+                     std::back_inserter(prefix_sum_of_probabilities));
+
+    std::default_random_engine seed((std::random_device()) ()); // 난수 생성기
+
+    const double uniform_0_1 = std::generate_canonical<double, std::numeric_limits<double>::digits>(seed);
+
+    const int interval_idx =
+            std::distance(std::cbegin(prefix_sum_of_probabilities),
+                          std::upper_bound(std::cbegin(prefix_sum_of_probabilities),
+                                           std::cend(prefix_sum_of_probabilities), uniform_0_1));
+    return values[interval_idx];
+}
+
+// 5.17 스도쿠 체크
+namespace {
+
+    bool
+    HasDuplicate(const std::vector<std::vector<int>> &partial_assignment, int start_row, int end_row, int start_col,
+                 int end_col);
+
+    bool IsValidSudoku(const std::vector<std::vector<int>> &partial_assignment) {
+        for (int i = 0; i < std::size(partial_assignment); ++i) {
+            if (HasDuplicate(partial_assignment, i, i + 1, 0, std::size(partial_assignment)))
+                return false;
+        }
+        for (int j = 0; j < std::size(partial_assignment); ++j) {
+            if (HasDuplicate(partial_assignment, 0, std::size(partial_assignment), j, j + 1))
+                return false;
+        }
+        int region_size = std::sqrt(std::size(partial_assignment));
+        for (int I = 0; I < region_size; ++I) {
+            for (int J = 0; J < region_size; ++J) {
+                if (HasDuplicate(partial_assignment, region_size * I,
+                                 region_size * (I + 1), region_size * J,
+                                 region_size * (J + 1)))
+                    return false;
+            }
+        }
+        return true;
+    }
+
+    bool
+    HasDuplicate(const std::vector<std::vector<int>> &partial_assignment, int start_row, int end_row, int start_col,
+                 int end_col) {
+        std::deque<bool> is_present(std::size(partial_assignment) + 1, false);
+        for (int i = start_row; i < end_row; ++i) {
+            for (int j = start_col; j < end_col; ++j) {
+                if (partial_assignment[i][j] != 0 && is_present[partial_assignment[i][j]])
+                    return true;
+                is_present[partial_assignment[i][j]] = true;
+            }
+        }
+        return false;
+    }
 
 }
