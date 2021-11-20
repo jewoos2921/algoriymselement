@@ -532,6 +532,6 @@ namespace {
             }
             pascal_triangle.emplace_back(curr_row);
         }
-        return pascal_triangle
+        return pascal_triangle;
     }
 }
