@@ -10,7 +10,7 @@
 #include <numeric>
 #include <random>
 #include <unordered_map>
-
+#include <array>
 
 
 // 정수 배열이 주어졌을 떄 짝수가 가장 먼저 나오게 하기
@@ -420,4 +420,118 @@ namespace {
         return false;
     }
 
+}
+
+// 5.18 2차원 배열에 나선형으로 원소 배치하기
+namespace {
+
+    void MatrixLayerInClockwise(const std::vector<std::vector<int>> &square_matrix, int offset,
+                                std::vector<int> *spiral_ordering);
+
+    std::vector<int> MatrixInSpiralOrder(const std::vector<std::vector<int>> &square_matrix) {
+        std::vector<int> spiral_ordering;
+        for (int offset = 0; offset < ceil(0.5 * std::size(square_matrix)); ++offset) {
+            MatrixLayerInClockwise(square_matrix, offset, &spiral_ordering);
+        }
+        return spiral_ordering;
+    }
+
+    void MatrixLayerInClockwise(const std::vector<std::vector<int>> &square_matrix, int offset,
+                                std::vector<int> *spiral_ordering) {
+        if (offset == std::size(square_matrix) - offset - 1) {
+            // square_matrix 의 크기는 홀수이므로, 마지막에 중심 원소가 하나가 남는다.
+            spiral_ordering->emplace_back(square_matrix[offset][offset]);
+            return;
+        }
+        for (int i = offset; i < std::size(square_matrix) - offset - 1; ++i) {
+            spiral_ordering->emplace_back(square_matrix[offset][i]);
+        }
+        for (int i = offset; i < std::size(square_matrix) - offset - 1; ++i) {
+            spiral_ordering->emplace_back(square_matrix[i][std::size(square_matrix) - offset - 1]);
+        }
+        for (int i = std::size(square_matrix) - offset - 1; i > offset; --i) {
+            spiral_ordering->emplace_back(square_matrix[std::size(square_matrix) - offset - 1][i]);
+        }
+        for (int i = std::size(square_matrix) - offset - 1; i > offset; --i) {
+            spiral_ordering->emplace_back(square_matrix[i][offset]);
+        }
+    }
+
+    std::vector<int> MatrixInSpiralOrder2(std::vector<std::vector<int>> &square_matrix) {
+        const std::array<std::array<int, 2>, 4> kShift = {{{0, 1},
+                                                           {1, 0},
+                                                           {0, -1},
+                                                           {-1, 0}}};
+        int dir{0}, x{0}, y{0};
+        std::vector<int> spiral_ordering;
+
+        for (int i = 0; i < std::size(square_matrix) * std::size(square_matrix); ++i) {
+            spiral_ordering.emplace_back(square_matrix[x][y]);
+            square_matrix[x][y] = 0;
+            int next_x = x + kShift[dir][0], next_y = y + kShift[dir][1];
+            if (next_x < 0 || next_y >= std::size(square_matrix) || next_y < 0 ||
+                next_y >= std::size(square_matrix) || square_matrix[next_x][next_y] == 0) {
+                dir = (dir + 1) % 4;
+                next_x = x + kShift[dir][0], next_y = y + kShift[dir][1];
+            }
+            x = next_x, y = next_y;
+        }
+        return spiral_ordering;
+
+    }
+}
+// 5.19 2차원 배열 회전하기
+namespace {
+    void RotateMatrix(std::vector<std::vector<int> > *square_matrix_ptr) {
+        std::vector<std::vector<int> > &square_matrix = *square_matrix_ptr;
+
+        const int matrix_size = std::size(square_matrix) - 1;
+
+        for (int i = 0; i < (std::size(square_matrix) / 2); ++i) {
+            for (int j = i; j < matrix_size - i; ++j) {
+                // 4개의 원소 교환을 수행한다.
+                int temp1 = square_matrix[matrix_size - j][i];
+                int temp2 = square_matrix[matrix_size - i][matrix_size - j];
+                int temp3 = square_matrix[j][matrix_size - i];
+                int temp4 = square_matrix[i][j];
+                square_matrix[i][j] = temp1;
+                square_matrix[matrix_size - j][i] = temp2;
+                square_matrix[matrix_size - i][matrix_size - j] = temp3;
+                square_matrix[j][matrix_size - i] = temp4;
+            }
+        }
+    }
+
+    class RotateMatrix_ {
+    public:
+        explicit RotateMatrix_(std::vector<std::vector<int *>> squre_matrix) : square_matrix_(*squre_matrix) {}
+
+        int ReadEntry(int i, int j) const {
+            return square_matrix_[std::size(square_matrix_) - 1 - j][i];
+        }
+
+        void WriteEntry(int i, int j, int v) {
+            square_matrix_[std::size(square_matrix_) - 1 - j][i] = v;
+        }
+
+    private:
+        std::vector<std::vector<int>> &square_matrix_;
+    };
+}
+
+// 5.20 파스칼의 삼각형에서 행 계산하기
+namespace {
+    std::vector<std::vector<int>> GeneratePascalTriangle(int num_rows) {
+        std::vector<std::vector<int>> pascal_triangle;
+        for (int i = 0; i < num_rows; ++i) {
+            std::vector<int> curr_row;
+            for (int j = 0; j <=i ; ++j) {
+                // 만약 이 위에 인접한 두 엔트리가 존재한다면 , 해당 엔트리의 값을 위에
+                // 인접한 두 엔트리의 합으로 나타내라
+                curr_row.emplace_back(0 < j && j < i ? pascal_triangle.back()[j - 1] + pascal_triangle.back()[j] : 1);
+            }
+            pascal_triangle.emplace_back(curr_row);
+        }
+        return pascal_triangle
+    }
 }
