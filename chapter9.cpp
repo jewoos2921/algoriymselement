@@ -132,5 +132,35 @@ namespace ch9 {
     }
 
     // 5. 이진 트리에서 루트-단말 노드 경로의 합 구하기
+    int SumRootToLeafHelper(const std::unique_ptr<BinaryTreeNode<int>> &tree,
+                            int partial_path_sum);
+
+    int SumRootToLeaf(const std::unique_ptr<BinaryTreeNode<int>> &tree) {
+        return SumRootToLeafHelper(tree, 0);
+    }
+
+    int SumRootToLeafHelper(const std::unique_ptr<BinaryTreeNode<int>> &tree, int partial_path_sum) {
+        if (tree == nullptr)
+            return 0;
+        partial_path_sum = partial_path_sum * 2 + tree->data;
+        if (tree->left == nullptr && tree->right == nullptr)
+            return partial_path_sum;
+
+        return SumRootToLeafHelper(tree->left, partial_path_sum) + SumRootToLeafHelper(tree->right, partial_path_sum);
+    }
+
+    // 6. 주어진 합에 해당하는 루트-단말 노드 경로 구하기
+    bool HasPathSum(const std::unique_ptr<BinaryTreeNode<int>> &tree,
+                    int remaining_weight) {
+        if (tree == nullptr)
+            return 0;
+        else if (tree->left == nullptr && tree->right == nullptr)
+            return remaining_weight == tree->data;
+
+        return HasPathSum(tree->left, remaining_weight - tree->data) ||
+               HasPathSum(tree->right, remaining_weight - tree->data);
+    }
+
+    // 7. 재귀를 사용하지 않고 중위 순회 구현하기
 
 }
