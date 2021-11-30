@@ -185,7 +185,82 @@ namespace ch18 {
                 }
             }
         }
-
     };
+
+    // 4. 데드락 찾기
+    struct GraphVertex {
+        enum Color {
+            kWhite, kGray, kBlack
+        } color = kWhite;
+        std::vector<GraphVertex *> edges;
+    };
+
+    bool HasCycle(GraphVertex *pVertex);
+
+    bool IsDeadlocked(std::vector<GraphVertex *> graph) {
+        return std::any_of(std::begin(*graph),
+                           std::end(*graph),
+                           [](GraphVertex &vertex) {
+                               return vertex.color == GraphVertex::kWhite && HasCycle(&vertex);
+                           });
+    }
+
+    bool HasCycle(GraphVertex *cur) {
+        //
+        if (cur->color == GraphVertex::kGray) {
+            return true;
+        }
+        cur->color = GraphVertex::kGray;
+
+        for (GraphVertex *&next: cur->edges) {
+            if (next->color != GraphVertex::kBlack && HasCycle(next))
+                return true;
+        }
+        cur->color = GraphVertex::kBlack;
+        return false;
+    }
+
+
+    // 5. 그래프 복제하기
+    struct GraphVertex_1 {
+        int label;
+        std::vector<GraphVertex_1 *> edges;
+    };
+
+    GraphVertex_1 *CloneGraph(GraphVertex_1 *graph) {
+        if (!graph)
+            return nullptr;
+
+        std::unordered_map<GraphVertex_1 *, GraphVertex_1 *> vertex_map;
+        std::queue<GraphVertex_1 *> q(std::deque<GraphVertex_1 *>(1, graph));
+        vertex_map.emplace(graph, new GraphVertex_1({graph->label}));
+
+        while (!std::empty(q)) {
+            auto v = q.front();
+            q.pop();
+
+            for (GraphVertex_1 *e: v->edges) {
+                //
+                if (vertex_map.emplace(e, new GraphVertex_1({e->label})).second) {
+                    q.emplace(e);
+                }
+                //
+                vertex_map[v]->edges.emplace_back(vertex_map[e]);
+            }
+        }
+        return vertex_map[graph];
+    }
+
+    // 6. 와이어로 회로 연결하기
+    struct GraphVertex_2 {
+        int label;
+        std::vector<GraphVertex_2 *> edges;
+    };
+
+    GraphVertex_2 *CloneGraph(GraphVertex_2 *graph) {
+        if (!graph)
+            return nullptr;
+
+    }
 }
 
