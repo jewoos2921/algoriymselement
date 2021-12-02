@@ -8,6 +8,8 @@
 // 라이브락: 프로세서가 어떤 연산을 반복 실행하지만 계속 실패할 때
 
 #include <mutex>
+#include <iostream>
+#include <asio/asio.hpp>
 
 using namespace std;
 
@@ -88,4 +90,77 @@ namespace {
         static vector<string> closest_to_last_word_;
         static mutex mx_;
     };
+
+    // 19.2 두 개의 스레드가 동기화되지 않은 채 번갈아 수행되는 경우 분석하기
+    static int counter = 0;
+
+    void IncrementThread(int n) {
+        for (int i = 0; i < n; ++i) {
+            ++counter;
+        }
+    }
+
+    void TwoThreadIncrementDriver(int n) {
+        thread T1(IncrementThread, n);
+        thread T2(IncrementThread, n);
+        T1.join();
+        T2.join();
+        cout << counter << endl;
+    }
+
+    // 19.3 두 개의 스레드가 번갈아 수행될 때 동기화 구현하기
+    class OddEvenMonitor {
+    public:
+        static const bool ODD_TURN = true;
+        static const bool EVEN_TURN = false;
+
+        OddEvenMonitor() : turn_(ODD_TURN) {}
+
+    private:
+        bool turn_;
+        condition_variable cond_;
+        mutex mx_;
+
+    public:
+        void WaitTurn(bool old_turn) {
+            unique_lock<mutex> lock(mx_);
+            while (turn_ != old_turn) {
+                // wait를 호출하면 알림 받은 현재 스레드의 실행을 차단
+                cond_.wait(lock);
+            }
+        }
+
+        void ToggleTrun() {
+            lock_guard<mutex> lock(mx_);
+            turn_ = !turn_;
+            // notify_one을 호출하면 이 조건을 기다리는 스레드 중 하나를 차단 해제한다.
+            cond_.notify_one();
+        }
+    };
+
+    void OddThread(OddEvenMonitor &monitor) {
+        for (int i = 1; i <= 100; i += 2) {
+            monitor.WaitTurn(OddEvenMonitor::ODD_TURN);
+            cout << i << endl;
+            monitor.ToggleTrun();
+        }
+    }
+
+    void EvenThread(OddEvenMonitor &monitor) {
+        for (int i = 2; i <= 100; i += 2) {
+            monitor.WaitTurn(OddEvenMonitor::EVEN_TURN);
+            cout << i << endl;
+            monitor.ToggleTrun();
+        }
+    }
+
+    // 19.4 스레드 풀 구현하기
+    // 간단한 HTTP 서버 구현
+    const unsigned short SERVERPORT = 8080;
+
+    void make_server(int argc, char *argv) {
+        asio::io_service io_service;
+
+    }
+
 }
